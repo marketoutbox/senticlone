@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, Legend } from "recharts"
+import { useWinRates } from "@/context/win-rate-context"
 
 interface TwitterSignal {
   date: string
@@ -46,6 +47,8 @@ export default function TwitterSignalsPage() {
 
   const [currentPrices, setCurrentPrices] = useState<Record<string, number>>({})
   const [pricesLoading, setPricesLoading] = useState(false)
+
+  const { setTwitterWinRate } = useWinRates()
 
   // Fetch current stock price using our API route
   const getCurrentPrice = async (symbol: string): Promise<number> => {
@@ -258,8 +261,10 @@ export default function TwitterSignalsPage() {
         losses,
         winRate: calculatedWinRate,
       }))
+
+      setTwitterWinRate(calculatedWinRate)
     }
-  }, [filteredData, currentPrices, pricesLoading])
+  }, [filteredData, currentPrices, pricesLoading, setTwitterWinRate])
 
   useEffect(() => {
     try {
