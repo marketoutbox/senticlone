@@ -5,25 +5,25 @@
 @layer base {
   :root {
     /* Light theme with grey background - using proper HSL format */
-    --background: 0 0% 100%; /* Light grey background */
-    --foreground: 240 10% 3.9%; /* Dark text */
+    --background: 210 20% 98%; /* Light grey background */
+    --foreground: 222.2 84% 4.9%; /* Dark text */
     --card: 0 0% 100%; /* Pure white cards */
-    --card-foreground: 240 10% 3.9%; /* Dark text on cards */
+    --card-foreground: 222.2 84% 4.9%; /* Dark text on cards */
     --popover: 0 0% 100%; /* White popovers */
-    --popover-foreground: 240 10% 3.9%; /* Dark text */
-    --primary: 240 5.9% 10%; /* Dark grey primary instead of blue */
-    --primary-foreground: 0 0% 98%; /* Light text on dark primary */
-    --secondary: 240 4.8% 95.9%; /* Light grey secondary */
-    --secondary-foreground: 240 5.9% 10%; /* Dark text */
-    --muted: 240 4.8% 95.9%; /* Muted background - light grey */
-    --muted-foreground: 240 3.8% 46.1%; /* Muted text */
-    --accent: 240 4.8% 95.9%; /* Accent background */
-    --accent-foreground: 240 5.9% 10%; /* Dark text on accent */
+    --popover-foreground: 222.2 84% 4.9%; /* Dark text */
+    --primary: 220 13% 18%; /* Dark grey primary instead of blue */
+    --primary-foreground: 210 40% 98%; /* Light text on dark primary */
+    --secondary: 210 40% 96%; /* Light grey secondary */
+    --secondary-foreground: 222.2 84% 4.9%; /* Dark text */
+    --muted: 210 40% 96%; /* Muted background - light grey */
+    --muted-foreground: 215.4 16.3% 46.9%; /* Muted text */
+    --accent: 210 40% 96%; /* Accent background */
+    --accent-foreground: 222.2 84% 4.9%; /* Dark text on accent */
     --destructive: 0 84.2% 60.2%; /* Red destructive */
-    --destructive-foreground: 0 0% 98%; /* Light text on red */
-    --border: 240 5.9% 90%; /* Light border */
-    --input: 240 5.9% 90%; /* Input border */
-    --ring: 240 5.9% 10%; /* Dark ring */
+    --destructive-foreground: 210 40% 98%; /* Light text on red */
+    --border: 214.3 31.8% 91.4%; /* Light border */
+    --input: 214.3 31.8% 91.4%; /* Input border */
+    --ring: 222.2 84% 4.9%; /* Dark ring */
     --radius: 0.5rem;
 
     /* Chart colors */
@@ -34,37 +34,37 @@
     --chart-5: 27 87% 67%;
 
     /* Sidebar colors */
-    --sidebar-background: 0 0% 98%; /* White sidebar */
+    --sidebar-background: 0 0% 100%; /* White sidebar */
     --sidebar-foreground: 240 5.3% 26.1%;
-    --sidebar-primary: 240 5.9% 10%; /* Dark grey primary */
-    --sidebar-primary-foreground: 0 0% 98%;
-    --sidebar-accent: 240 4.8% 95.9%;
-    --sidebar-accent-foreground: 240 5.9% 10%;
-    --sidebar-border: 220 13% 91%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    --sidebar-primary: 220 13% 18%; /* Dark grey primary */
+    --sidebar-primary-foreground: 210 40% 98%;
+    --sidebar-accent: 210 40% 96%;
+    --sidebar-accent-foreground: 222.2 84% 4.9%;
+    --sidebar-border: 214.3 31.8% 91.4%;
+    --sidebar-ring: 222.2 84% 4.9%;
   }
 
   .dark {
     /* Dark theme with proper contrast hierarchy */
-    --background: 240 10% 3.9%; /* Very dark background */
-    --foreground: 0 0% 98%; /* Light text */
-    --card: 240 10% 3.9%; /* Medium dark grey for cards */
-    --card-foreground: 0 0% 98%; /* Light text on cards */
-    --popover: 240 10% 3.9%; /* Same as cards */
-    --popover-foreground: 240 10% 3.9%; /* Light text */
-    --primary: 0 0% 98%; /* Light grey primary for dark theme */
-    --primary-foreground: 240 5.9% 10%; /* Dark text on light primary */
-    --secondary: 240 3.7% 15.9%; /* Lighter than cards for secondary elements */
-    --secondary-foreground: 0 0% 98%; /* Light text */
-    --muted: 240 3.7% 15.9%; /* Much darker than cards - for progress bars, inputs */
-    --muted-foreground: 240 5% 64.9%; /* Muted light text */
-    --accent: 240 3.7% 15.9%; /* Lighter than cards for hover states */
-    --accent-foreground: 0 0% 98%; /* Light text on accent */
+    --background: 222.2 84% 4.9%; /* Very dark background */
+    --foreground: 210 40% 98%; /* Light text */
+    --card: 215 25% 20%; /* Medium dark grey for cards */
+    --card-foreground: 210 40% 98%; /* Light text on cards */
+    --popover: 215 25% 20%; /* Same as cards */
+    --popover-foreground: 210 40% 98%; /* Light text */
+    --primary: 210 40% 98%; /* Light grey primary for dark theme */
+    --primary-foreground: 222.2 84% 4.9%; /* Dark text on light primary */
+    --secondary: 215 25% 27%; /* Lighter than cards for secondary elements */
+    --secondary-foreground: 210 40% 98%; /* Light text */
+    --muted: 215 25% 12%; /* Much darker than cards - for progress bars, inputs */
+    --muted-foreground: 215 20.2% 65.1%; /* Muted light text */
+    --accent: 215 25% 27%; /* Lighter than cards for hover states */
+    --accent-foreground: 210 40% 98%; /* Light text on accent */
     --destructive: 0 62.8% 30.6%; /* Darker red */
-    --destructive-foreground: 0 0% 98%; /* Light text on red */
-    --border: 240 3.7% 15.9%; /* Visible but subtle borders */
-    --input: 240 3.7% 15.9%; /* Same as muted - darker input backgrounds */
-    --ring: 240 4.9% 83.9%; /* Light ring */
+    --destructive-foreground: 210 40% 98%; /* Light text on red */
+    --border: 215 25% 27%; /* Visible but subtle borders */
+    --input: 215 25% 12%; /* Same as muted - darker input backgrounds */
+    --ring: 212.7 26.8% 83.9%; /* Light ring */
 
     /* Chart colors for dark mode */
     --chart-1: 220 70% 50%;
@@ -74,14 +74,14 @@
     --chart-5: 340 75% 55%;
 
     /* Dark sidebar with proper contrast */
-    --sidebar-background: 240 10% 3.9%; /* Same as cards */
-    --sidebar-foreground: 0 0% 98%; /* Light text */
-    --sidebar-primary: 0 0% 98%; /* Light primary */
-    --sidebar-primary-foreground: 240 5.9% 10%; /* Dark text on light */
-    --sidebar-accent: 240 3.7% 15.9%; /* Lighter for hover */
-    --sidebar-accent-foreground: 0 0% 98%; /* Light text */
-    --sidebar-border: 240 3.7% 15.9%; /* Visible borders */
-    --sidebar-ring: 217.2 91.2% 59.8%; /* Light ring */
+    --sidebar-background: 215 25% 20%; /* Same as cards */
+    --sidebar-foreground: 210 40% 98%; /* Light text */
+    --sidebar-primary: 210 40% 98%; /* Light primary */
+    --sidebar-primary-foreground: 222.2 84% 4.9%; /* Dark text on light */
+    --sidebar-accent: 215 25% 27%; /* Lighter for hover */
+    --sidebar-accent-foreground: 210 40% 98%; /* Light text */
+    --sidebar-border: 215 25% 27%; /* Visible borders */
+    --sidebar-ring: 212.7 26.8% 83.9%; /* Light ring */
   }
 }
 
