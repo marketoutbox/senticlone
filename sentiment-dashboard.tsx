@@ -26,6 +26,7 @@ import { StockDetailView } from "./components/stock-detail-view"
 import { CorrelationChart } from "./components/correlation-chart"
 import StockAllocation from "./components/stock-allocation"
 import { AddBasketModal } from "./components/add-basket-modal"
+import { ModelAccuracy } from "./components/model-accuracy"
 import { useAuth } from "@/context/auth-context"
 import {
   saveBasket,
@@ -40,18 +41,15 @@ import {
 import { useToast } from "@/hooks/use-toast"
 import { Slider } from "@/components/ui/slider"
 
-// Add this import at the top with the other imports
 import { Edit } from "lucide-react"
 import { Calendar } from "@/components/ui/calendar"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { supabase } from "@/lib/supabase"
 
 const SentimentDashboard = () => {
-  // Auth context
   const { user } = useAuth()
   const { toast } = useToast()
 
-  // State for time period and source weights
   const [timePeriod, setTimePeriod] = useState("1w")
   const [weights, setWeights] = useState({
     twitter: 0.4,
@@ -59,17 +57,14 @@ const SentimentDashboard = () => {
     news: 0.3,
   })
 
-  // Add this after the weights state
   const [weightLocks, setWeightLocks] = useState({
     twitter: false,
     googleTrends: false,
     news: false,
   })
 
-  // Add this state for date editing near the other state declarations
   const [isEditingLockDate, setIsEditingLockDate] = useState(false)
 
-  // Sample basket of stocks with allocation percentages
   const [stocks, setStocks] = useState([
     { id: 1, symbol: "AAPL", name: "Apple Inc.", sector: "Technology", allocation: 25, locked: false },
     { id: 2, symbol: "MSFT", name: "Microsoft Corp.", sector: "Technology", allocation: 20, locked: true },
@@ -78,7 +73,6 @@ const SentimentDashboard = () => {
     { id: 5, symbol: "META", name: "Meta Platforms Inc.", sector: "Technology", allocation: 20, locked: true },
   ])
 
-  // State for basket management
   const [basketId, setBasketId] = useState<string | null>(null)
   const [basketName, setBasketName] = useState("Tech Leaders")
   const [basketLocked, setBasketLocked] = useState(false)
@@ -88,41 +82,38 @@ const SentimentDashboard = () => {
     locked: null,
   })
 
-  // State for basket management
   const [allBaskets, setAllBaskets] = useState<StockBasket[]>([])
   const [selectedBasketId, setSelectedBasketId] = useState<string | null>(null)
   const [isLoadingBaskets, setIsLoadingBaskets] = useState(false)
 
-  // State for Add Basket Modal
   const [isAddBasketModalOpen, setIsAddBasketModalOpen] = useState(false)
 
-  // State for loading
   const [isLoading, setIsLoading] = useState(false)
+  const [sourceWinRates, setSourceWinRates] = useState({
+    // New state for win rates
+    news: 0,
+    googleTrends: 0,
+    twitter: 0,
+  })
 
-  // Sample sentiment data
   const sentimentData = {
     "1d": generateSentimentData(1),
     "1w": generateSentimentData(7),
     "1m": generateSentimentData(30),
   }
 
-  // State for stock selector dialog
   const [isStockSelectorOpen, setIsStockSelectorOpen] = useState(false)
 
-  // State for selected stock
   const [selectedStock, setSelectedStock] = useState(null)
 
-  // State for allocation editor
   const [isAllocationEditorOpen, setIsAllocationEditorOpen] = useState(false)
 
-  // State for section collapse
   const [sectionsCollapsed, setSectionsCollapsed] = useState({
     inputs: false,
     insights: false,
     tracking: false,
   })
 
-  // Load user's baskets and most recent basket when component mounts
   useEffect(() => {
     if (user) {
       loadUserBaskets()
@@ -130,7 +121,29 @@ const SentimentDashboard = () => {
     }
   }, [user])
 
-  // Load all user baskets
+  // New useEffect to fetch aggregated win rates
+  useEffect(() => {
+    const fetchAggregatedWinRates = async () => {
+      try {
+        const res = await fetch("/api/aggregated-win-rates")
+        if (!res.ok) {
+          throw new Error(`Failed to fetch aggregated win rates: ${res.statusText}`)
+        }
+        const data = await res.json()
+        setSourceWinRates(data)
+      } catch (error) {
+        console.error("Error fetching aggregated win rates:", error)
+        toast({
+          title: "Error",
+          description: "Failed to load overall win rates.",
+          variant: "destructive",
+        })
+      }
+    }
+
+    fetchAggregatedWinRates()
+  }, []) // Run once on component mount
+
   const loadUserBaskets = async () => {
     setIsLoadingBaskets(true)
     try {
@@ -151,7 +164,6 @@ const SentimentDashboard = () => {
     }
   }
 
-  // Load a specific basket
   const loadBasket = async (basketId: string) => {
     setIsLoading(true)
     try {
@@ -168,23 +180,20 @@ const SentimentDashboard = () => {
       }
 
       if (basket) {
-        // Update the state with the loaded basket
         setBasketId(basket.id)
         setSelectedBasketId(basket.id)
         setBasketName(basket.name)
         setBasketLocked(basket.is_locked)
         setWeights(basket.source_weights)
 
-        // Convert dates
         if (basket.created_at) {
           setBasketDates({
             created: new Date(basket.created_at),
             updated: basket.updated_at ? new Date(basket.updated_at) : null,
-            locked: basket.locked_at ? new Date(basket.locked_at) : null, // Add locked date
+            locked: basket.locked_at ? new Date(basket.locked_at) : null,
           })
         }
 
-        // Convert stocks format
         if (basketStocks && basketStocks.length > 0) {
           const formattedStocks = basketStocks.map((stock) => ({
             id: stock.id,
@@ -211,7 +220,6 @@ const SentimentDashboard = () => {
     }
   }
 
-  // Load the most recent basket
   const loadMostRecentBasket = async () => {
     setIsLoading(true)
     try {
@@ -228,23 +236,20 @@ const SentimentDashboard = () => {
       }
 
       if (basket) {
-        // Update the state with the loaded basket
         setBasketId(basket.id)
         setSelectedBasketId(basket.id)
         setBasketName(basket.name)
         setBasketLocked(basket.is_locked)
         setWeights(basket.source_weights)
 
-        // Convert dates
         if (basket.created_at) {
           setBasketDates({
             created: new Date(basket.created_at),
             updated: basket.updated_at ? new Date(basket.updated_at) : null,
-            locked: basket.locked_at ? new Date(basket.locked_at) : null, // Add locked date
+            locked: basket.locked_at ? new Date(basket.locked_at) : null,
           })
         }
 
-        // Convert stocks format
         if (basketStocks && basketStocks.length > 0) {
           const formattedStocks = basketStocks.map((stock) => ({
             id: stock.id,
@@ -264,7 +269,6 @@ const SentimentDashboard = () => {
     }
   }
 
-  // Save changes to current basket
   const saveCurrentBasket = async (isLocked = false) => {
     if (!user) {
       toast({
@@ -286,16 +290,14 @@ const SentimentDashboard = () => {
 
     setIsLoading(true)
     try {
-      // Format the basket data
       const basketData: StockBasket = {
         id: basketId,
         name: basketName,
         source_weights: weights,
         is_locked: isLocked,
-        locked_at: basketDates.locked?.toISOString(), // Preserve the existing locked date
+        locked_at: basketDates.locked?.toISOString(),
       }
 
-      // Format the stocks data
       const stocksData: BasketStock[] = stocks.map((stock) => ({
         symbol: stock.symbol,
         name: stock.name,
@@ -304,7 +306,6 @@ const SentimentDashboard = () => {
         is_locked: stock.locked,
       }))
 
-      // Save the basket
       const { error } = await saveBasket(basketData, stocksData, false)
 
       if (error) {
@@ -322,17 +323,15 @@ const SentimentDashboard = () => {
         description: "Your changes have been saved.",
       })
 
-      // If locking the basket, update the state
       if (isLocked) {
         setBasketLocked(true)
         const now = new Date()
         setBasketDates({
           created: basketDates.created || now,
           updated: now,
-          locked: now, // Set the locked date
+          locked: now,
         })
 
-        // Scroll to the basket tracking section
         setTimeout(() => {
           const trackingSection = document.getElementById("tracking-section")
           if (trackingSection) {
@@ -340,7 +339,6 @@ const SentimentDashboard = () => {
           }
         }, 100)
 
-        // Only reload baskets list when locking (status change)
         await loadUserBaskets()
       }
     } catch (error) {
@@ -355,7 +353,6 @@ const SentimentDashboard = () => {
     }
   }
 
-  // Create new basket
   const createNewBasket = async (newBasketName: string) => {
     if (!user) {
       toast({
@@ -368,14 +365,12 @@ const SentimentDashboard = () => {
 
     setIsLoading(true)
     try {
-      // Format the basket data
       const basketData: StockBasket = {
         name: newBasketName,
         source_weights: weights,
         is_locked: false,
       }
 
-      // Format the stocks data
       const stocksData: BasketStock[] = stocks.map((stock) => ({
         symbol: stock.symbol,
         name: stock.name,
@@ -384,7 +379,6 @@ const SentimentDashboard = () => {
         is_locked: stock.locked,
       }))
 
-      // Save the new basket
       const { error, basketId: newBasketId } = await saveBasket(basketData, stocksData, true)
 
       if (error) {
@@ -397,7 +391,6 @@ const SentimentDashboard = () => {
         return
       }
 
-      // Update state to switch to the new basket
       if (newBasketId) {
         setBasketId(newBasketId)
         setSelectedBasketId(newBasketId)
@@ -407,7 +400,7 @@ const SentimentDashboard = () => {
         setBasketDates({
           created: now,
           updated: now,
-          locked: null, // New baskets aren't locked
+          locked: null,
         })
       }
 
@@ -416,7 +409,6 @@ const SentimentDashboard = () => {
         description: `New basket "${newBasketName}" created successfully.`,
       })
 
-      // Close modal and reload baskets list
       setIsAddBasketModalOpen(false)
       await loadUserBaskets()
     } catch (error) {
@@ -431,7 +423,6 @@ const SentimentDashboard = () => {
     }
   }
 
-  // Delete basket
   const handleDeleteBasket = async () => {
     if (!user) {
       toast({
@@ -460,7 +451,6 @@ const SentimentDashboard = () => {
       return
     }
 
-    // Confirm deletion
     if (!confirm(`Are you sure you want to delete the basket "${basketName}"? This action cannot be undone.`)) {
       return
     }
@@ -484,7 +474,6 @@ const SentimentDashboard = () => {
         description: `Basket "${basketName}" has been deleted.`,
       })
 
-      // Reset state
       setBasketId(null)
       setSelectedBasketId(null)
       setBasketName("New Basket")
@@ -492,10 +481,9 @@ const SentimentDashboard = () => {
       setBasketDates({
         created: null,
         updated: null,
-        locked: null, // Reset locked date
+        locked: null,
       })
 
-      // Reload baskets list
       await loadUserBaskets()
     } catch (error) {
       console.error("Error in handleDeleteBasket:", error)
@@ -509,16 +497,13 @@ const SentimentDashboard = () => {
     }
   }
 
-  // Add this function to handle updating the lock date
   const handleUpdateLockDate = async (newDate: Date) => {
     if (!basketId) return
 
     setIsLoading(true)
     try {
-      // Format the date for Supabase
       const formattedDate = newDate.toISOString()
 
-      // Update the locked_at field in the database
       const { error } = await supabase.from("stock_baskets").update({ locked_at: formattedDate }).eq("id", basketId)
 
       if (error) {
@@ -531,7 +516,6 @@ const SentimentDashboard = () => {
         return
       }
 
-      // Update local state
       setBasketDates({
         ...basketDates,
         locked: newDate,
@@ -553,7 +537,6 @@ const SentimentDashboard = () => {
     }
   }
 
-  // Unlock basket
   const handleUnlockBasket = async () => {
     if (!user) {
       toast({
@@ -601,10 +584,8 @@ const SentimentDashboard = () => {
         description: `Basket "${basketName}" has been unlocked and is now editable.`,
       })
 
-      // Update state
       setBasketLocked(false)
 
-      // Reload baskets list
       await loadUserBaskets()
     } catch (error) {
       console.error("Error in handleUnlockBasket:", error)
@@ -618,14 +599,12 @@ const SentimentDashboard = () => {
     }
   }
 
-  // Handle basket selection change
   const handleBasketChange = (basketId: string) => {
     if (basketId && basketId !== selectedBasketId) {
       loadBasket(basketId)
     }
   }
 
-  // Toggle section collapse
   const toggleSection = (section) => {
     setSectionsCollapsed({
       ...sectionsCollapsed,
@@ -633,22 +612,17 @@ const SentimentDashboard = () => {
     })
   }
 
-  // Function to handle saving stocks from the stock selector
   const handleSaveStocks = (newStocks) => {
-    // If these are stocks from the StockAllocation component, just update them directly
     if (newStocks.length > 0 && newStocks[0].hasOwnProperty("allocation")) {
-      // Remove duplicates by id before setting
       const uniqueStocks = newStocks.filter((stock, index, self) => index === self.findIndex((s) => s.id === stock.id))
       setStocks(uniqueStocks)
       return
     }
 
-    // Otherwise, this is from the StockSelector - handle adding new stocks
     const existingStockIds = stocks.map((stock) => stock.id)
     const brandNewStocks = newStocks.filter((stock) => !existingStockIds.includes(stock.id))
     const continuingStocks = newStocks.filter((stock) => existingStockIds.includes(stock.id))
 
-    // Preserve allocations and locked status for existing stocks
     const updatedContinuingStocks = continuingStocks.map((newStock) => {
       const existingStock = stocks.find((s) => s.id === newStock.id)
       return {
@@ -658,14 +632,12 @@ const SentimentDashboard = () => {
       }
     })
 
-    // Set new stocks to 0% allocation by default
     const updatedNewStocks = brandNewStocks.map((stock) => ({
       ...stock,
       allocation: 0,
       locked: false,
     }))
 
-    // Combine continuing and new stocks, ensuring no duplicates
     const finalStocks = [...updatedContinuingStocks, ...updatedNewStocks]
     const uniqueFinalStocks = finalStocks.filter(
       (stock, index, self) => index === self.findIndex((s) => s.id === stock.id),
@@ -674,7 +646,6 @@ const SentimentDashboard = () => {
     setStocks(uniqueFinalStocks)
   }
 
-  // Generate weighted composite sentiment
   const calculateWeightedSentiment = () => {
     return sentimentData[timePeriod].map((day) => {
       const weightedSentiment =
@@ -689,8 +660,6 @@ const SentimentDashboard = () => {
     })
   }
 
-  // Add these functions after the calculateWeightedSentiment function
-  // Function to toggle lock status of a weight
   const toggleWeightLock = (source) => {
     setWeightLocks({
       ...weightLocks,
@@ -698,22 +667,16 @@ const SentimentDashboard = () => {
     })
   }
 
-  // Update the handleWeightChange function to respect locks
   const handleWeightChange = (source, value) => {
     const newValue = Number.parseFloat(value[0])
 
-    // Calculate how much we need to adjust other weights to maintain sum = 1
     const otherSources = Object.keys(weights).filter((key) => key !== source && !weightLocks[key])
 
-    // If all other sources are locked, we can't adjust
     if (otherSources.length === 0) {
-      // Just update this source and normalize
       const newWeights = { ...weights, [source]: newValue }
       const sum = Object.values(newWeights).reduce((a, b) => a + b, 0)
 
-      // Normalize to ensure sum is exactly 1
       if (Math.abs(sum - 1) > 0.001) {
-        // Adjust this source to make sum = 1
         newWeights[source] = newValue + (1 - sum)
       }
 
@@ -721,7 +684,6 @@ const SentimentDashboard = () => {
       return
     }
 
-    // Calculate the total weight that should be distributed among other sources
     const remainingWeight =
       1 -
       newValue -
@@ -729,20 +691,16 @@ const SentimentDashboard = () => {
         .filter((key) => key !== source && weightLocks[key])
         .reduce((sum, key) => sum + weights[key], 0)
 
-    // Calculate the current sum of other unlocked weights
     const currentOtherSum = otherSources.reduce((sum, key) => sum + weights[key], 0)
 
-    // Create new weights object
     const newWeights = { ...weights, [source]: newValue }
 
-    // If other weights sum to zero, distribute evenly
     if (currentOtherSum === 0) {
       const evenDistribution = remainingWeight / otherSources.length
       otherSources.forEach((key) => {
         newWeights[key] = evenDistribution
       })
     } else {
-      // Otherwise, distribute proportionally
       otherSources.forEach((key) => {
         const proportion = weights[key] / currentOtherSum
         newWeights[key] = remainingWeight * proportion
@@ -750,15 +708,12 @@ const SentimentDashboard = () => {
       })
     }
 
-    // Ensure all weights are non-negative and sum to 1
     Object.keys(newWeights).forEach((key) => {
       newWeights[key] = Math.max(0, newWeights[key])
     })
 
-    // Normalize to ensure sum is exactly 1
     const sum = Object.values(newWeights).reduce((a, b) => a + b, 0)
     if (sum > 0 && Math.abs(sum - 1) > 0.001) {
-      // Find an unlocked source to adjust
       const adjustSource = otherSources.length > 0 ? otherSources[0] : source
       newWeights[adjustSource] += 1 - sum
     }
@@ -768,60 +723,48 @@ const SentimentDashboard = () => {
 
   const weightedData = calculateWeightedSentiment()
 
-  // Function to handle clicking on a stock
   const handleStockClick = (stock) => {
-    if (!stock) return // Guard clause to prevent clicking on undefined stock
+    if (!stock) return
 
-    // Find the full stock data with price
     const stockWithPrice = stockPerformanceData.find((s) => s.id === stock.id) || {
       ...stock,
-      price: 100, // Default price if not found
-      change: 0, // Default change if not found
+      price: 100,
+      change: 0,
       performance: 0,
     }
 
     setSelectedStock(stockWithPrice)
   }
 
-  // Function to toggle lock status of a stock
   const handleToggleLock = (stockId) => {
     const updatedStocks = stocks.map((stock) => (stock.id === stockId ? { ...stock, locked: !stock.locked } : stock))
     setStocks(updatedStocks)
   }
 
-  // Function to reset allocations to equal distribution
   const handleResetAllocations = () => {
-    // Create a copy of stocks
     const updatedStocks = [...stocks]
 
-    // Calculate total allocation of locked stocks
     const lockedStocks = updatedStocks.filter((stock) => stock.locked)
     const lockedAllocation = lockedStocks.reduce((sum, stock) => sum + stock.allocation, 0)
 
-    // Calculate number of unlocked stocks
     const unlockedStocks = updatedStocks.filter((stock) => !stock.locked)
     const unlockedCount = unlockedStocks.length
 
     if (unlockedCount === 0) {
-      // If all stocks are locked, we can't reset
       return
     }
 
-    // Calculate equal distribution for unlocked stocks
     const remainingAllocation = 100 - lockedAllocation
     const equalAllocation = Math.floor(remainingAllocation / unlockedCount)
 
-    // Distribute equally among unlocked stocks
     updatedStocks.forEach((stock) => {
       if (!stock.locked) {
         stock.allocation = equalAllocation
       }
     })
 
-    // Adjust for rounding errors
     const newTotal = updatedStocks.reduce((sum, stock) => sum + stock.allocation, 0)
     if (newTotal < 100) {
-      // Find the first unlocked stock to adjust
       const firstUnlockedStock = updatedStocks.find((stock) => !stock.locked)
       if (firstUnlockedStock) {
         firstUnlockedStock.allocation += 100 - newTotal
@@ -831,44 +774,32 @@ const SentimentDashboard = () => {
     setStocks(updatedStocks)
   }
 
-  // Function to update stock allocation using slider
   const handleAllocationChange = (stockId, newAllocation) => {
-    // Create a copy of stocks
     const updatedStocks = [...stocks]
 
-    // Find the stock to update
     const stockIndex = updatedStocks.findIndex((s) => s.id === stockId)
     if (stockIndex === -1) return
 
-    // Calculate the difference in allocation
     const oldAllocation = updatedStocks[stockIndex].allocation
     const difference = newAllocation - oldAllocation
 
-    // Update the allocation for the selected stock
     updatedStocks[stockIndex].allocation = newAllocation
 
-    // Find unlocked stocks to adjust (excluding the one being modified)
     const unlockedStocks = updatedStocks.filter((s) => !s.locked && s.id !== stockId)
 
     if (unlockedStocks.length > 0) {
-      // Get the total allocation of unlocked stocks (excluding the one being modified)
       const totalUnlockedAllocation = unlockedStocks.reduce((sum, s) => sum + s.allocation, 0)
 
-      // Adjust each unlocked stock proportionally
       updatedStocks.forEach((stock) => {
         if (!stock.locked && stock.id !== stockId) {
-          // Calculate the proportion this stock represents of all unlocked stocks
           const proportion =
             totalUnlockedAllocation > 0 ? stock.allocation / totalUnlockedAllocation : 1 / unlockedStocks.length
-          // Reduce this stock's allocation proportionally
           stock.allocation = Math.max(0, stock.allocation - difference * proportion)
         }
       })
 
-      // Ensure total allocation is exactly 100%
       const totalAllocation = updatedStocks.reduce((sum, stock) => sum + stock.allocation, 0)
       if (Math.abs(totalAllocation - 100) > 0.01) {
-        // Find the first unlocked stock that's not the one we're updating
         const adjustmentStock = updatedStocks.find((s) => !s.locked && s.id !== stockId)
         if (adjustmentStock) {
           adjustmentStock.allocation += 100 - totalAllocation
@@ -876,7 +807,6 @@ const SentimentDashboard = () => {
       }
     }
 
-    // Round all allocations to integers
     updatedStocks.forEach((stock) => {
       stock.allocation = Math.round(stock.allocation)
     })
@@ -884,16 +814,14 @@ const SentimentDashboard = () => {
     setStocks(updatedStocks)
   }
 
-  // Generate stock performance data
   const stockPerformanceData = stocks.map((stock) => {
-    const basePerformance = Math.random() * 10 - 5 // Random between -5% and +5%
+    const basePerformance = Math.random() * 10 - 5
     const compositeSentiment = weightedData[weightedData.length - 1].compositeSentiment
     const sentimentImpact = compositeSentiment > 0 ? compositeSentiment * 2 : compositeSentiment
     const performance = Number.parseFloat((basePerformance + sentimentImpact).toFixed(2))
 
-    // Generate a random price between 50 and 500
     const price = Number.parseFloat((Math.random() * 450 + 50).toFixed(2))
-    const change = performance // Use performance as the change percentage
+    const change = performance
 
     return {
       ...stock,
@@ -907,27 +835,23 @@ const SentimentDashboard = () => {
     }
   })
 
-  // Color function for sentiment
   const getSentimentColor = (value) => {
     if (value > 0.3) return "text-emerald-500"
     if (value >= -0.3) return "text-amber-500"
     return "text-red-500"
   }
 
-  // Color function for performance
   const getPerformanceColor = (value) => {
     if (value > 0) return "text-emerald-500"
     return "text-red-500"
   }
 
-  // Get sentiment icon
   const getSentimentIcon = (value) => {
     if (value > 0.3) return <ArrowUp className="h-4 w-4 text-emerald-500" />
     if (value >= -0.3) return <Activity className="h-4 w-4 text-amber-500" />
     return <ArrowDown className="h-4 w-4 text-red-500" />
   }
 
-  // Get overall sentiment status
   const getOverallSentiment = () => {
     const latestComposite = weightedData[weightedData.length - 1].compositeSentiment
 
@@ -940,7 +864,6 @@ const SentimentDashboard = () => {
 
   const overallSentiment = getOverallSentiment()
 
-  // Format date for display
   const formatDate = (date) => {
     if (!date) return "N/A"
     return date instanceof Date ? `${date.getMonth() + 1}/${date.getDate()}/${date.getFullYear()}` : "N/A"
@@ -1018,75 +941,78 @@ const SentimentDashboard = () => {
 
                     <CardContent>
                       <div className="space-y-6">
-                        {stocks.map((stock) => {
-                          const stockData = stockPerformanceData.find((s) => s.id === stock.id) || stock
-                          return (
-                            <div key={stock.id} className="space-y-3">
-                              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
-                                <div className="flex items-center gap-3">
-                                  <div className="w-16 font-medium text-foreground">{stock.symbol}</div>
-                                  <div className="text-sm text-muted-foreground truncate">{stock.name}</div>
-                                </div>
-                                <div className="flex items-center gap-3 w-full sm:w-auto justify-between sm:justify-end">
-                                  <div className="text-sm font-medium text-foreground min-w-[3rem] text-right">
-                                    {stock.allocation}%
+                        {stocks &&
+                          stocks.map((stock) => {
+                            // Defensive check
+                            const stockData = stockPerformanceData.find((s) => s.id === stock.id) || stock
+                            return (
+                              <div key={stock.id} className="space-y-3">
+                                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
+                                  <div className="flex items-center gap-3">
+                                    <div className="w-16 font-medium text-foreground">{stock.symbol}</div>
+                                    <div className="text-sm text-muted-foreground truncate">{stock.name}</div>
                                   </div>
-                                  <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    className="h-8 w-8"
-                                    onClick={() => handleToggleLock(stock.id)}
-                                    disabled={basketLocked}
-                                  >
-                                    {stock.locked ? (
-                                      <Lock className="h-4 w-4 text-amber-500" />
-                                    ) : (
-                                      <Unlock className="h-4 w-4 text-muted-foreground" />
-                                    )}
-                                  </Button>
+                                  <div className="flex items-center gap-3 w-full sm:w-auto justify-between sm:justify-end">
+                                    <div className="text-sm font-medium text-foreground min-w-[3rem] text-right">
+                                      {stock.allocation}%
+                                    </div>
+                                    <Button
+                                      variant="ghost"
+                                      size="icon"
+                                      className="h-8 w-8"
+                                      onClick={() => handleToggleLock(stock.id)}
+                                      disabled={basketLocked}
+                                    >
+                                      {stock.locked ? (
+                                        <Lock className="h-4 w-4 text-amber-500" />
+                                      ) : (
+                                        <Unlock className="h-4 w-4 text-muted-foreground" />
+                                      )}
+                                    </Button>
+                                  </div>
                                 </div>
-                              </div>
 
-                              {/* Single Interactive Allocation Bar */}
-                              <div className="space-y-2">
-                                <div className="relative">
-                                  <Slider
-                                    value={[stock.allocation]}
-                                    max={100}
-                                    step={1}
-                                    disabled={stock.locked || basketLocked}
-                                    onValueChange={(value) => handleAllocationChange(stock.id, value[0])}
-                                    className="py-1"
-                                  />
-                                  {/* Overlay the sentiment color on the slider track */}
-                                  <div
-                                    className={`absolute top-1/2 left-0 h-2 rounded-full pointer-events-none transform -translate-y-1/2 transition-all duration-300 ${
-                                      stockData.compositeSentiment > 0.3
-                                        ? "bg-emerald-500/20"
-                                        : stockData.compositeSentiment > -0.3
-                                          ? "bg-amber-500/20"
-                                          : "bg-red-500/20"
-                                    }`}
-                                    style={{ width: `${stock.allocation}%` }}
-                                  />
-                                </div>
-                                {stock.locked && (
-                                  <div className="text-xs text-amber-600 flex items-center gap-1">
-                                    <Lock className="h-3 w-3" />
-                                    Position locked at {stock.allocation}%
+                                <div className="space-y-2">
+                                  <div className="relative">
+                                    <Slider
+                                      value={[stock.allocation]}
+                                      max={100}
+                                      step={1}
+                                      disabled={stock.locked || basketLocked}
+                                      onValueChange={(value) => handleAllocationChange(stock.id, value[0])}
+                                      className="py-1"
+                                    />
+                                    <div
+                                      className={`absolute top-1/2 left-0 h-2 rounded-full pointer-events-none transform -translate-y-1/2 transition-all duration-300 ${
+                                        stockData.compositeSentiment > 0.3
+                                          ? "bg-emerald-500/20"
+                                          : stockData.compositeSentiment > -0.3
+                                            ? "bg-amber-500/20"
+                                            : "bg-red-500/20"
+                                      }`}
+                                      style={{ width: `${stock.allocation}%` }}
+                                    />
                                   </div>
-                                )}
+                                  {stock.locked && (
+                                    <div className="text-xs text-amber-600 flex items-center gap-1">
+                                      <Lock className="h-3 w-3" />
+                                      Position locked at {stock.allocation}%
+                                    </div>
+                                  )}
+                                </div>
                               </div>
-                            </div>
-                          )
-                        })}
+                            )
+                          })}
                       </div>
                     </CardContent>
 
                     <CardFooter className="flex flex-wrap justify-between border-t pt-4 gap-2">
                       <div className="flex items-center gap-4">
                         <div className="text-sm text-muted-foreground">
-                          <span className="font-medium text-foreground">{stocks.filter((s) => s.locked).length}</span>{" "}
+                          <span className="font-medium text-foreground">
+                            {stocks && stocks.filter((s) => s.locked).length}
+                          </span>{" "}
+                          {/* Defensive check */}
                           of {stocks.length} positions locked
                         </div>
                         <Button
@@ -1108,7 +1034,6 @@ const SentimentDashboard = () => {
 
                   {/* Source Weighting and Correlation */}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-                    {/* Source Weighting Controls */}
                     <Card>
                       <CardHeader>
                         <CardTitle className="flex items-center gap-2 text-lg sm:text-xl">
@@ -1222,19 +1147,14 @@ const SentimentDashboard = () => {
                         </div>
                       </CardContent>
                     </Card>
-
-                    {/* Sentiment-Performance Correlation */}
-                    <CorrelationChart stocks={stocks} weights={weights} />
+                    <CorrelationChart stocks={stocks} weights={weights} sourceWinRates={sourceWinRates} />{" "}
+                    {/* Pass new prop */}
                   </div>
 
                   <div className="mb-6">
-                    {/* Model Accuracy */}
-                    {/* This component is not provided in the attachment, assuming it exists */}
-                    {/* If it causes an error, you might need to provide its code or remove it */}
-                    {/* <ModelAccuracy /> */}
+                    <ModelAccuracy />
                   </div>
 
-                  {/* Simplified Basket Management */}
                   <Card className="mb-6">
                     <CardHeader>
                       <CardTitle className="flex items-center gap-2 text-lg sm:text-xl">
@@ -1247,7 +1167,6 @@ const SentimentDashboard = () => {
                     </CardHeader>
                     <CardContent>
                       <div className="flex flex-col sm:flex-row gap-3 w-full">
-                        {/* Basket Dropdown */}
                         <div className="flex-1">
                           <Select value={selectedBasketId || ""} onValueChange={handleBasketChange}>
                             <SelectTrigger className="bg-background border-border">
@@ -1271,7 +1190,6 @@ const SentimentDashboard = () => {
                           </Select>
                         </div>
 
-                        {/* Action Buttons */}
                         <div className="flex flex-wrap gap-2 mt-2 sm:mt-0">
                           <Button
                             variant="outline"
@@ -1312,7 +1230,6 @@ const SentimentDashboard = () => {
                         </div>
                       </div>
 
-                      {/* Current Basket Info */}
                       {basketId && (
                         <div className="mt-4 pt-4 border-t">
                           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 text-sm">
@@ -1496,7 +1413,7 @@ const SentimentDashboard = () => {
                         <PopoverContent className="w-auto p-0" align="end">
                           <Calendar
                             mode="single"
-                            selected={basketDates.locked || undefined}
+                            selected={basketDates.locked}
                             onSelect={(date) => {
                               if (date) {
                                 handleUpdateLockDate(date)
@@ -1513,32 +1430,24 @@ const SentimentDashboard = () => {
               </div>
             )}
 
-            {/* Footer */}
-            <div className="mt-8 pt-6 border-t text-center text-muted-foreground text-sm">
-              <p>© 2025 Sentiment Analysis Dashboard. Data refreshes every 15 minutes.</p>
-            </div>
-
-            {/* Modals */}
-            <AddBasketModal
-              open={isAddBasketModalOpen}
-              onOpenChange={setIsAddBasketModalOpen}
-              onSave={createNewBasket}
-              isLoading={isLoading}
-            />
-
             <StockSelector
-              open={isStockSelectorOpen}
-              onOpenChange={setIsStockSelectorOpen}
-              initialStocks={stocks}
-              onSave={handleSaveStocks}
+              isOpen={isStockSelectorOpen}
+              onClose={() => setIsStockSelectorOpen(false)}
+              selectedStocks={stocks}
+              onSaveStocks={handleSaveStocks}
             />
+
             <StockAllocation
-              open={isAllocationEditorOpen}
-              onOpenChange={setIsAllocationEditorOpen}
+              isOpen={isAllocationEditorOpen}
+              onClose={() => setIsAllocationEditorOpen(false)}
               stocks={stocks}
-              onSave={handleSaveStocks}
-              onAllocationChange={handleAllocationChange}
-              onToggleLock={handleToggleLock}
+              onSaveStocks={handleSaveStocks}
+            />
+
+            <AddBasketModal
+              isOpen={isAddBasketModalOpen}
+              onClose={() => setIsAddBasketModalOpen(false)}
+              onCreateBasket={createNewBasket}
             />
           </>
         )}
@@ -1547,58 +1456,23 @@ const SentimentDashboard = () => {
   )
 }
 
-// Helper function to generate sample sentiment data
 function generateSentimentData(days) {
   const data = []
-  const now = new Date()
-  let twitterBaseline = Math.random() * 0.4 + 0.1 // 0.1 to 0.5
-  let googleBaseline = Math.random() * 0.4 - 0.2 // -0.2 to 0.2
-  let newsBaseline = Math.random() * 0.6 - 0.3 // -0.3 to 0.3
+  const today = new Date()
 
   for (let i = days - 1; i >= 0; i--) {
-    const date = new Date(now)
+    const date = new Date(today)
     date.setDate(date.getDate() - i)
 
-    // Create some variability in the sentiment
-    const twitterVariation = Math.random() * 0.4 - 0.2 // -0.2 to 0.2
-    const googleVariation = Math.random() * 0.3 - 0.15 // -0.15 to 0.15
-    const newsVariation = Math.random() * 0.5 - 0.25 // -0.25 to 0.25
-
-    // Create some correlation between the sentiments
-    const commonFactor = Math.random() * 0.3 - 0.15 // -0.15 to 0.15
-
-    // Calculate sentiments with bounds checking
-    const twitterSentiment = clamp(twitterBaseline + twitterVariation + commonFactor, -1, 1)
-    const googleTrendsSentiment = clamp(googleBaseline + googleVariation + commonFactor, -1, 1)
-    const newsSentiment = clamp(newsBaseline + newsVariation + commonFactor, -1, 1)
-
-    // Format date as MM/DD
-    const formattedDate = `${date.getMonth() + 1}/${date.getDate()}`
-
     data.push({
-      date: formattedDate,
-      twitterSentiment,
-      googleTrendsSentiment,
-      newsSentiment,
+      date: date.toISOString().split("T")[0],
+      twitterSentiment: Number.parseFloat((Math.random() * 2 - 1).toFixed(2)),
+      googleTrendsSentiment: Number.parseFloat((Math.random() * 2 - 1).toFixed(2)),
+      newsSentiment: Number.parseFloat((Math.random() * 2 - 1).toFixed(2)),
     })
-
-    // Adjust baselines slightly for trend
-    twitterBaseline += Math.random() * 0.1 - 0.05
-    googleBaseline += Math.random() * 0.08 - 0.04
-    newsBaseline += Math.random() * 0.12 - 0.06
-
-    // Keep baselines in reasonable range
-    twitterBaseline = clamp(twitterBaseline, -0.7, 0.7)
-    googleBaseline = clamp(googleBaseline, -0.7, 0.7)
-    newsBaseline = clamp(newsBaseline, -0.7, 0.7)
   }
 
   return data
-}
-
-// Helper function to clamp a value between min and max
-function clamp(value, min, max) {
-  return Math.min(Math.max(value, min), max)
 }
 
 export default SentimentDashboard
