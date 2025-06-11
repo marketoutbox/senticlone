@@ -89,12 +89,6 @@ const SentimentDashboard = () => {
   const [isAddBasketModalOpen, setIsAddBasketModalOpen] = useState(false)
 
   const [isLoading, setIsLoading] = useState(false)
-  const [sourceWinRates, setSourceWinRates] = useState({
-    // New state for win rates
-    news: 0,
-    googleTrends: 0,
-    twitter: 0,
-  })
 
   const sentimentData = {
     "1d": generateSentimentData(1),
@@ -120,29 +114,6 @@ const SentimentDashboard = () => {
       loadMostRecentBasket()
     }
   }, [user])
-
-  // New useEffect to fetch aggregated win rates
-  useEffect(() => {
-    const fetchAggregatedWinRates = async () => {
-      try {
-        const res = await fetch("/api/aggregated-win-rates")
-        if (!res.ok) {
-          throw new Error(`Failed to fetch aggregated win rates: ${res.statusText}`)
-        }
-        const data = await res.json()
-        setSourceWinRates(data)
-      } catch (error) {
-        console.error("Error fetching aggregated win rates:", error)
-        toast({
-          title: "Error",
-          description: "Failed to load overall win rates.",
-          variant: "destructive",
-        })
-      }
-    }
-
-    fetchAggregatedWinRates()
-  }, []) // Run once on component mount
 
   const loadUserBaskets = async () => {
     setIsLoadingBaskets(true)
@@ -1147,8 +1118,8 @@ const SentimentDashboard = () => {
                         </div>
                       </CardContent>
                     </Card>
-                    <CorrelationChart stocks={stocks} weights={weights} sourceWinRates={sourceWinRates} />{" "}
-                    {/* Pass new prop */}
+
+                    <CorrelationChart stocks={stocks} weights={weights} />
                   </div>
 
                   <div className="mb-6">
