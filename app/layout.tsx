@@ -1,12 +1,11 @@
 import type React from "react"
 import type { Metadata } from "next"
 import "./globals.css"
-import Providers from "@/components/providers"
+import { Providers } from "@/components/providers" // Changed to named import
 
 export const metadata: Metadata = {
-  title: "v0 App",
-  description: "Created with v0",
-  generator: "v0.dev",
+  title: "Sentiment Dashboard",
+  description: "Track market sentiment across multiple data sources",
 }
 
 export default function RootLayout({
@@ -15,7 +14,7 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <body>
         <Providers>{children}</Providers>
       </body>
