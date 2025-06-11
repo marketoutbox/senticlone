@@ -1,7 +1,7 @@
 "use client"
 
 import { createContext, useContext, useState } from "react"
-import { ToastContainer } from "@/components/ui/toast" // This imports the shadcn/ui toast container
+import { ToastContainer } from "@/components/ui/toast"
 
 const ToastContext = createContext({
   toast: ({ title, description, variant, duration }) => {},
