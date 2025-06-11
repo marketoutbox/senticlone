@@ -32,6 +32,9 @@ export default function NewsSignalsPage() {
     negative: 0,
     neutral: 0,
     lastUpdate: "",
+    wins: 0, // New
+    losses: 0, // New
+    winRate: 0, // New
   })
   const [comparisonData, setComparisonData] = useState([])
 
@@ -96,6 +99,9 @@ export default function NewsSignalsPage() {
           negative: data.filter((item: NewsSignal) => item.sentiment.toLowerCase() === "negative").length,
           neutral: data.filter((item: NewsSignal) => item.sentiment.toLowerCase() === "neutral").length,
           lastUpdate: data.length > 0 ? formatDate(data[0].date) : "N/A",
+          wins: 0, // Will be calculated in a separate useEffect
+          losses: 0, // Will be calculated in a separate useEffect
+          winRate: 0, // Will be calculated in a separate useEffect
         }
         setSummaryStats(stats)
 
@@ -114,6 +120,46 @@ export default function NewsSignalsPage() {
       fetchCurrentPrices(uniqueSymbols)
     }
   }, [data])
+
+  // New useEffect to calculate Win Rate
+  useEffect(() => {
+    if (filteredData.length > 0 && !pricesLoading) {
+      let wins = 0
+      let losses = 0
+
+      filteredData.forEach((signal) => {
+        const currentPrice = currentPrices[signal.comp_symbol] || 0
+        const entryPrice = signal.entry_price
+
+        if (entryPrice === 0) return // Cannot calculate P/L if entry price is 0
+
+        if (signal.sentiment.toLowerCase() === "positive") {
+          if (currentPrice >= entryPrice) {
+            wins++
+          } else {
+            losses++
+          }
+        } else if (signal.sentiment.toLowerCase() === "negative") {
+          if (currentPrice <= entryPrice) {
+            wins++
+          } else {
+            losses++
+          }
+        }
+        // Neutral signals are ignored for win/loss calculation
+      })
+
+      const totalTrades = wins + losses
+      const calculatedWinRate = totalTrades > 0 ? (wins / totalTrades) * 100 : 0
+
+      setSummaryStats((prevStats) => ({
+        ...prevStats,
+        wins,
+        losses,
+        winRate: calculatedWinRate,
+      }))
+    }
+  }, [filteredData, currentPrices, pricesLoading])
 
   useEffect(() => {
     // Apply filters and sorting
@@ -169,12 +215,13 @@ export default function NewsSignalsPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-7xl mx-auto px-6 lg:px-8 py-8">
+        {" "}
+        {/* Updated classes */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-foreground">News Signals</h1>
           <p className="text-muted-foreground mt-2">View the latest News sentiment signals for each stock.</p>
         </div>
-
         {/* Summary Stats Card */}
         <Card className="mb-8">
           <CardContent className="p-6">
@@ -194,6 +241,11 @@ export default function NewsSignalsPage() {
                 </span>
               </div>
               <div className="flex flex-col">
+                <span className="text-muted-foreground text-sm">Win Rate %</span> {/* New Display */}
+                <span className="text-foreground text-2xl font-bold">{summaryStats.winRate.toFixed(2)}%</span>{" "}
+                {/* New Display */}
+              </div>
+              <div className="flex flex-col">
                 <span className="text-muted-foreground text-sm">Positive Signals</span>
                 <span className="text-green-600 text-2xl font-bold">{summaryStats.positive}</span>
               </div>
@@ -207,7 +259,6 @@ export default function NewsSignalsPage() {
             </div>
           </CardContent>
         </Card>
-
         {/* Filters and Controls */}
         <Card className="mb-8">
           <CardContent className="p-6">
@@ -256,7 +307,6 @@ export default function NewsSignalsPage() {
             </div>
           </CardContent>
         </Card>
-
         {/* Table View */}
         <Card className="mb-8">
           <CardContent className="p-0">
@@ -281,39 +331,65 @@ export default function NewsSignalsPage() {
                       <th className="px-6 py-4 text-center font-medium">Sentiment</th>
                       <th className="px-6 py-4 font-medium text-right">Entry Price</th>
                       <th className="px-6 py-4 font-medium text-right">Current Price</th>
+                      <th className="px-6 py-4 font-medium text-right">P/L%</th> {/* Updated Header */}
                     </tr>
                   </thead>
                   <tbody>
-                    {filteredData.map((row, i) => (
-                      <tr key={i} className="border-b border-border hover:bg-muted/50 transition-colors">
-                        <td className="px-6 py-4 text-foreground">{row.date}</td>
-                        <td className="px-6 py-4 font-medium text-foreground">{row.comp_symbol}</td>
-                        <td className="px-6 py-4 text-foreground max-w-xs truncate">{row.analyzed_articles}</td>
-                        <td className="px-6 py-4 text-right text-foreground">{row.sentiment_score}</td>
-                        <td className="px-6 py-4 text-center">
-                          <span
-                            className={`px-3 py-1 rounded-full text-xs font-medium inline-block
-                              ${
-                                row.sentiment.toLowerCase() === "positive"
-                                  ? "bg-green-100 text-green-800 border border-green-200 dark:bg-green-900/20 dark:text-green-400 dark:border-green-800"
-                                  : row.sentiment.toLowerCase() === "negative"
-                                    ? "bg-red-100 text-red-800 border border-red-200 dark:bg-red-900/20 dark:text-red-400 dark:border-red-800"
-                                    : "bg-amber-100 text-amber-800 border border-amber-200 dark:bg-amber-900/20 dark:text-amber-400 dark:border-amber-800"
-                              }`}
-                          >
-                            {row.sentiment}
-                          </span>
-                        </td>
-                        <td className="px-6 py-4 text-right text-foreground">${row.entry_price}</td>
-                        <td className="px-6 py-4 text-right text-foreground">
-                          {pricesLoading ? (
-                            <Loader2 className="h-4 w-4 animate-spin inline" />
-                          ) : (
-                            `$${(currentPrices[row.comp_symbol] || 0).toFixed(2)}`
-                          )}
-                        </td>
-                      </tr>
-                    ))}
+                    {filteredData.map((row, i) => {
+                      const currentPrice = currentPrices[row.comp_symbol] || 0
+                      const entryPrice = row.entry_price
+                      let pLPercentage: number | null = null
+                      let changeColorClass = ""
+
+                      if (row.sentiment.toLowerCase() === "positive") {
+                        if (entryPrice !== 0) {
+                          pLPercentage = ((currentPrice - entryPrice) / entryPrice) * 100
+                        }
+                      } else if (row.sentiment.toLowerCase() === "negative") {
+                        if (entryPrice !== 0) {
+                          pLPercentage = ((entryPrice - currentPrice) / entryPrice) * 100 // Inverted for profit
+                        }
+                      }
+
+                      if (pLPercentage !== null) {
+                        changeColorClass = pLPercentage > 0 ? "text-green-600" : pLPercentage < 0 ? "text-red-600" : ""
+                      }
+
+                      return (
+                        <tr key={i} className="border-b border-border hover:bg-muted/50 transition-colors">
+                          <td className="px-6 py-4 text-foreground">{row.date}</td>
+                          <td className="px-6 py-4 font-medium text-foreground">{row.comp_symbol}</td>
+                          <td className="px-6 py-4 text-foreground max-w-xs truncate">{row.analyzed_articles}</td>
+                          <td className="px-6 py-4 text-right text-foreground">{row.sentiment_score}</td>
+                          <td className="px-6 py-4 text-center">
+                            <span
+                              className={`px-3 py-1 rounded-full text-xs font-medium inline-block
+                                ${
+                                  row.sentiment.toLowerCase() === "positive"
+                                    ? "bg-green-100 text-green-800 border border-green-200 dark:bg-green-900/20 dark:text-green-400 dark:border-green-800"
+                                    : row.sentiment.toLowerCase() === "negative"
+                                      ? "bg-red-100 text-red-800 border border-red-200 dark:bg-red-900/20 dark:text-red-400 dark:border-red-800"
+                                      : "bg-amber-100 text-amber-800 border border-amber-200 dark:bg-amber-900/20 dark:text-amber-400 dark:border-amber-800"
+                                }`}
+                            >
+                              {row.sentiment}
+                            </span>
+                          </td>
+                          <td className="px-6 py-4 text-right text-foreground">${row.entry_price}</td>
+                          <td className="px-6 py-4 text-right text-foreground">
+                            {pricesLoading ? (
+                              <Loader2 className="h-4 w-4 animate-spin inline" />
+                            ) : (
+                              `$${(currentPrices[row.comp_symbol] || 0).toFixed(2)}`
+                            )}
+                          </td>
+                          <td className={`px-6 py-4 text-right font-medium ${changeColorClass}`}>
+                            {pLPercentage !== null ? `${pLPercentage.toFixed(2)}%` : "N/A"}
+                          </td>{" "}
+                          {/* Updated Column */}
+                        </tr>
+                      )
+                    })}
                   </tbody>
                 </table>
               </div>
@@ -324,7 +400,6 @@ export default function NewsSignalsPage() {
             )}
           </CardContent>
         </Card>
-
         {/* Signal Source Comparison */}
         <Card>
           <CardHeader>
