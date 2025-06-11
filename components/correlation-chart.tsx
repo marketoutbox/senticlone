@@ -5,7 +5,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { InfoIcon as InfoCircle } from "lucide-react"
 
-export function CorrelationChart({ stocks, weights }) {
+export function CorrelationChart({ stocks, weights, sourceWinRates }) {
+  // Accept sourceWinRates prop
   // State for the selected basket
   const [selectedBasket, setSelectedBasket] = useState("all")
 
@@ -16,28 +17,28 @@ export function CorrelationChart({ stocks, weights }) {
       correlation: 0.92,
       impact: "Strong Positive",
       color: "#10b981", // emerald-500
-      winRate: 75, // Placeholder win rate
+      winRate: sourceWinRates.googleTrends, // Use real win rate
     },
     {
       name: "Twitter",
       correlation: 0.65,
       impact: "Moderate Positive",
       color: "#f59e0b", // amber-500
-      winRate: 60, // Placeholder win rate
+      winRate: sourceWinRates.twitter, // Use real win rate
     },
     {
       name: "Composite",
       correlation: 0.58,
       impact: "Moderate Positive",
       color: "#3b82f6", // blue-500
-      winRate: 62, // Placeholder win rate
+      winRate: (sourceWinRates.googleTrends + sourceWinRates.twitter + sourceWinRates.news) / 3, // Simple average for composite
     },
     {
       name: "News",
       correlation: 0.15,
       impact: "Poor Correlation",
       color: "#ef4444", // red-500
-      winRate: 45, // Placeholder win rate
+      winRate: sourceWinRates.news, // Use real win rate
     },
   ]
 
@@ -115,7 +116,7 @@ export function CorrelationChart({ stocks, weights }) {
                   <div className="grid grid-cols-2 gap-4">
                     <div className="text-lg font-medium">{source.name}</div>
                     <div className="flex items-center justify-end text-lg font-medium" style={{ color: source.color }}>
-                      {source.correlation.toFixed(2)} - {source.impact} ({source.winRate}%)
+                      {source.correlation.toFixed(2)} - {source.impact} ({source.winRate.toFixed(2)}%)
                     </div>
                   </div>
 
