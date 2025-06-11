@@ -7,7 +7,6 @@ import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, Legend } from "recharts"
-import { useWinRates } from "@/context/win-rate-context"
 
 interface NewsSignal {
   date: string
@@ -41,8 +40,6 @@ export default function NewsSignalsPage() {
 
   const [currentPrices, setCurrentPrices] = useState<Record<string, number>>({})
   const [pricesLoading, setPricesLoading] = useState(false)
-
-  const { setNewsWinRate } = useWinRates()
 
   // Fetch current prices for all symbols
   const fetchCurrentPrices = async (symbols: string[]) => {
@@ -161,10 +158,8 @@ export default function NewsSignalsPage() {
         losses,
         winRate: calculatedWinRate,
       }))
-
-      setNewsWinRate(calculatedWinRate)
     }
-  }, [filteredData, currentPrices, pricesLoading, setNewsWinRate])
+  }, [filteredData, currentPrices, pricesLoading])
 
   useEffect(() => {
     // Apply filters and sorting
