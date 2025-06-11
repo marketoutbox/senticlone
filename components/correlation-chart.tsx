@@ -5,8 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { InfoIcon as InfoCircle } from "lucide-react"
 
-export function CorrelationChart({ stocks, weights, sourceWinRates }) {
-  // Accept sourceWinRates prop
+export function CorrelationChart({ stocks, weights }) {
   // State for the selected basket
   const [selectedBasket, setSelectedBasket] = useState("all")
 
@@ -17,28 +16,24 @@ export function CorrelationChart({ stocks, weights, sourceWinRates }) {
       correlation: 0.92,
       impact: "Strong Positive",
       color: "#10b981", // emerald-500
-      winRate: sourceWinRates.googleTrends, // Use real win rate
     },
     {
       name: "Twitter",
       correlation: 0.65,
       impact: "Moderate Positive",
       color: "#f59e0b", // amber-500
-      winRate: sourceWinRates.twitter, // Use real win rate
     },
     {
       name: "Composite",
       correlation: 0.58,
       impact: "Moderate Positive",
       color: "#3b82f6", // blue-500
-      winRate: (sourceWinRates.googleTrends + sourceWinRates.twitter + sourceWinRates.news) / 3, // Simple average for composite
     },
     {
       name: "News",
       correlation: 0.15,
       impact: "Poor Correlation",
       color: "#ef4444", // red-500
-      winRate: sourceWinRates.news, // Use real win rate
     },
   ]
 
@@ -97,7 +92,7 @@ export function CorrelationChart({ stocks, weights, sourceWinRates }) {
           <div className="grid grid-cols-2 gap-4 py-2 text-sm font-medium text-slate-400">
             <div>Source</div>
             <div className="flex items-center justify-end">
-              Correlation Impact / Win Rate %
+              Correlation Impact
               <InfoCircle className="ml-1 h-4 w-4" />
             </div>
           </div>
@@ -106,43 +101,37 @@ export function CorrelationChart({ stocks, weights, sourceWinRates }) {
           <div className="h-px bg-slate-800"></div>
 
           {/* Source rows */}
-          {sourceCorrelationData &&
-            sourceCorrelationData.map(
-              (
-                source,
-                index, // Defensive check
-              ) => (
-                <div key={index} className="space-y-2">
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="text-lg font-medium">{source.name}</div>
-                    <div className="flex items-center justify-end text-lg font-medium" style={{ color: source.color }}>
-                      {source.correlation.toFixed(2)} - {source.impact} ({source.winRate.toFixed(2)}%)
-                    </div>
-                  </div>
-
-                  {/* Progress bar background */}
-                  <div className="h-4 w-full rounded-full bg-slate-800/50">
-                    {/* Progress bar fill */}
-                    <div
-                      className="h-full rounded-full"
-                      style={{
-                        width: getWidthPercentage(source.correlation),
-                        backgroundColor: source.color,
-                      }}
-                    ></div>
-                  </div>
-
-                  {/* Scale labels */}
-                  <div className="grid grid-cols-5 text-xs text-slate-400">
-                    <div>Poor (0.0)</div>
-                    <div className="text-center">Weak (0.3)</div>
-                    <div className="text-center">Moderate (0.5)</div>
-                    <div className="text-center">Strong (0.8)</div>
-                    <div className="text-right">Perfect (1.0)</div>
-                  </div>
+          {sourceCorrelationData.map((source, index) => (
+            <div key={index} className="space-y-2">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="text-lg font-medium">{source.name}</div>
+                <div className="flex items-center justify-end text-lg font-medium" style={{ color: source.color }}>
+                  {source.correlation.toFixed(2)} - {source.impact}
                 </div>
-              ),
-            )}
+              </div>
+
+              {/* Progress bar background */}
+              <div className="h-4 w-full rounded-full bg-slate-800/50">
+                {/* Progress bar fill */}
+                <div
+                  className="h-full rounded-full"
+                  style={{
+                    width: getWidthPercentage(source.correlation),
+                    backgroundColor: source.color,
+                  }}
+                ></div>
+              </div>
+
+              {/* Scale labels */}
+              <div className="grid grid-cols-5 text-xs text-slate-400">
+                <div>Poor (0.0)</div>
+                <div className="text-center">Weak (0.3)</div>
+                <div className="text-center">Moderate (0.5)</div>
+                <div className="text-center">Strong (0.8)</div>
+                <div className="text-right">Perfect (1.0)</div>
+              </div>
+            </div>
+          ))}
 
           {/* Divider */}
           <div className="h-px bg-slate-800"></div>
@@ -153,40 +142,28 @@ export function CorrelationChart({ stocks, weights, sourceWinRates }) {
 
             {/* Scale bar */}
             <div className="flex h-6 w-full rounded-full overflow-hidden">
-              {correlationScale &&
-                correlationScale.map(
-                  (
-                    segment,
-                    index, // Defensive check
-                  ) => (
-                    <div
-                      key={index}
-                      className="h-full"
-                      style={{
-                        backgroundColor: segment.color,
-                        width: "25%", // Equal width for each segment
-                      }}
-                    ></div>
-                  ),
-                )}
+              {correlationScale.map((segment, index) => (
+                <div
+                  key={index}
+                  className="h-full"
+                  style={{
+                    backgroundColor: segment.color,
+                    width: "25%", // Equal width for each segment
+                  }}
+                ></div>
+              ))}
             </div>
 
             {/* Scale labels */}
             <div className="grid grid-cols-4 text-sm">
-              {correlationScale &&
-                correlationScale.map(
-                  (
-                    segment,
-                    index, // Defensive check
-                  ) => (
-                    <div key={index} className={index === 0 ? "" : index === 3 ? "text-right" : "text-center"}>
-                      <div className="font-medium" style={{ color: segment.color }}>
-                        {segment.label}
-                      </div>
-                      <div className="text-xs text-slate-400">{segment.range}</div>
-                    </div>
-                  ),
-                )}
+              {correlationScale.map((segment, index) => (
+                <div key={index} className={index === 0 ? "" : index === 3 ? "text-right" : "text-center"}>
+                  <div className="font-medium" style={{ color: segment.color }}>
+                    {segment.label}
+                  </div>
+                  <div className="text-xs text-slate-400">{segment.range}</div>
+                </div>
+              ))}
             </div>
           </div>
         </div>
