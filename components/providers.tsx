@@ -6,7 +6,7 @@ import { ThemeProvider } from "@/components/theme-provider"
 import { AuthProvider } from "@/context/auth-context"
 import { WinRateProvider } from "@/context/win-rate-context"
 import { Toaster } from "@/components/ui/toaster"
-import { ToastProvider } from "@/components/toast-provider"
+import { ToastProvider } from "./toast-provider"
 
 export function Providers({ children }: { children: React.ReactNode }) {
   return (
