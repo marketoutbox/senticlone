@@ -58,7 +58,6 @@ export function Toast({ id, title, description, variant = "default", visible, on
 }
 
 export function ToastContainer({ toasts, onClose }) {
-  // Ensure this is exported
   return (
     <div className="fixed bottom-0 right-0 z-50 p-4 space-y-4">
       {toasts.map((toast) => (
